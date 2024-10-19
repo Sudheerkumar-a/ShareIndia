@@ -1,0 +1,44 @@
+import 'dart:convert';
+
+import 'package:shareindia/core/constants/constants.dart';
+import 'package:shareindia/core/enum/enum.dart';
+import 'package:shareindia/data/local/user_data_db.dart';
+
+class UserCredentialsEntity {
+  static UserCredentialsEntity? userData;
+  int? id;
+  String? name;
+  String? username;
+  int? departmentID;
+  UserType? userType;
+  bool? isoUser;
+  String? isoUserCategories;
+  String? contactNumber;
+  bool? userOnvaction;
+  UserCredentialsEntity();
+  factory UserCredentialsEntity.details({isDataChanged = false}) {
+    if ((userData == null || isDataChanged) && userToken.isNotEmpty) {
+      userData = UserCredentialsEntity();
+      String normalizedSource = base64Url.normalize(userToken.split(".")[1]);
+      final data = jsonDecode(utf8.decode(base64Url.decode(normalizedSource)));
+      userData?.id = int.tryParse(data['ID']);
+      userData?.departmentID = int.tryParse(data['DepartmentID']);
+      userData?.username = data['UserName'];
+      userData?.name = data['Name'];
+      userData?.userType = UserType.fromId(int.tryParse(data['Role']) ?? 7);
+      userData?.isoUser = bool.tryParse((data['isoUser'] ?? "false")) ?? false;
+      userData?.isoUserCategories = data['isoUserCategories'];
+      userData?.contactNumber = data['contactNumber'];
+      userData?.userOnvaction =
+          bool.tryParse('${data['onVacation'] ?? false}'.toLowerCase());
+    }
+    return userData ?? UserCredentialsEntity();
+  }
+
+  factory UserCredentialsEntity.create(String userToken) {
+    final userDetails = UserDataDB();
+    userDetails.put(UserDataDB.userToken, userToken);
+    userData == null;
+    return UserCredentialsEntity.details(isDataChanged: true);
+  }
+}
